@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SoapUI project - import with File > Import Project -->
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://eviware.com/soapui/config http://www.soapui.org/xsd/soapui-config.xsd"
+                    name="enrollment-tests" activeEnvironment="Default">
+
+  <con:settings/>
+
+  <con:interface name="EnrollmentServiceSoap" type="soap"
+                 definition="http://localhost:8080/ode/processes/EnrollmentService?wsdl">
+    <con:operation name="enroll" action="enroll" isOneWay="false">
+      <con:input name="enrollIn">
+        <con:request name="Request 1">
+          <con:endpoint>http://localhost:8080/ode/processes/EnrollmentService</con:endpoint>
+          <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <enr:enroll>
+         <enr:payload>
+            <enr:studentId>STU-10345</enr:studentId>
+            <enr:program>MSc-ISI</enr:program>
+            <enr:amount>350000</enr:amount>
+         </enr:payload>
+      </enr:enroll>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request>
+        </con:request>
+      </con:input>
+    </con:operation>
+  </con:interface>
+
+  <con:testSuite name="EnrollmentSuite">
+    <con:settings/>
+
+    <!-- TC 1: nominal payment -->
+    <con:testCase name="TC01_Nominal_350000">
+      <con:settings/>
+      <con:testStep name="enroll" type="soap">
+        <con:config>
+          <con:endpoint>http://localhost:8080/ode/processes/EnrollmentService</con:endpoint>
+          <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
+   <soapenv:Body>
+      <enr:enroll><enr:payload>
+         <enr:studentId>STU-10345</enr:studentId><enr:program>MSc-ISI</enr:program><enr:amount>350000</enr:amount>
+      </enr:payload></enr:enroll>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request>
+        </con:config>
+      </con:testStep>
+      <con:assertion type="Contains"><con:configuration><con:content>ENROLLED</con:content></con:configuration></con:assertion>
+    </con:testCase>
+
+    <!-- TC 2: refused payment triggers compensation -->
+    <con:testCase name="TC02_Refused_900000">
+      <con:settings/>
+      <con:testStep name="enroll" type="soap">
+        <con:config>
+          <con:endpoint>http://localhost:8080/ode/processes/EnrollmentService</con:endpoint>
+          <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
+   <soapenv:Body>
+      <enr:enroll><enr:payload>
+         <enr:studentId>STU-90001</enr:studentId><enr:program>MSc-ISI</enr:program><enr:amount>900000</enr:amount>
+      </enr:payload></enr:enroll>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request>
+        </con:config>
+      </con:testStep>
+      <con:assertion type="Contains"><con:configuration><con:content>REFUSED</con:content></con:configuration></con:assertion>
+    </con:testCase>
+
+    <!-- TC 3: boundary value, exactly the 500 000 FCFA threshold -->
+    <con:testCase name="TC03_Boundary_500000">
+      <con:settings/>
+      <con:testStep name="enroll" type="soap">
+        <con:config>
+          <con:endpoint>http://localhost:8080/ode/processes/EnrollmentService</con:endpoint>
+          <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
+   <soapenv:Body>
+      <enr:enroll><enr:payload>
+         <enr:studentId>STU-50000</enr:studentId><enr:program>MSc-ISI</enr:program><enr:amount>500000</enr:amount>
+      </enr:payload></enr:enroll>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request>
+        </con:config>
+      </con:testStep>
+      <con:assertion type="Contains"><con:configuration><con:content>ENROLLED</con:content></con:configuration></con:assertion>
+    </con:testCase>
+
+    <!-- TC 4: rollback verification: refuse, then check university registry at /status -->
+    <con:testCase name="TC04_RollbackVerification">
+      <con:settings/>
+      <con:testStep name="enroll_refused" type="soap">
+        <con:config>
+          <con:endpoint>http://localhost:8080/ode/processes/EnrollmentService</con:endpoint>
+          <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
+   <soapenv:Body>
+      <enr:enroll><enr:payload>
+         <enr:studentId>STU-77777</enr:studentId><enr:program>MSc-ISI</enr:program><enr:amount>900000</enr:amount>
+      </enr:payload></enr:enroll>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request>
+        </con:config>
+      </con:testStep>
+      <con:testStep name="check_university_status" type="http">
+        <con:config>
+          <con:endpoint>http://localhost:8080/university-service/status</con:endpoint>
+          <con:method>GET</con:method>
+        </con:config>
+      </con:testStep>
+      <con:assertion type="Contains"><con:configuration><con:content>CANCELLED</con:content></con:configuration></con:assertion>
+    </con:testCase>
+
+  </con:testSuite>
+</con:soapui-project>
