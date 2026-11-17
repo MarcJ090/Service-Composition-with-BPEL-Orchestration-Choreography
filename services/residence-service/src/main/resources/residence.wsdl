@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="ResidenceService"
+  targetNamespace="http://tp.bpel/residence/"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:tns="http://tp.bpel/residence/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype">
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://tp.bpel/residence/">
+      <xsd:element name="assignRoomRequest">
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name="studentId" type="xsd:string"/>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+      <xsd:element name="assignRoomResponse">
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name="studentId" type="xsd:string"/>
+          <xsd:element name="roomNumber" type="xsd:string"/>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="assignIn"><wsdl:part name="payload" element="tns:assignRoomRequest"/></wsdl:message>
+  <wsdl:message name="assignOut"><wsdl:part name="payload" element="tns:assignRoomResponse"/></wsdl:message>
+
+  <wsdl:portType name="ResidencePT">
+    <wsdl:operation name="assignRoom">
+      <wsdl:input message="tns:assignIn"/>
+      <wsdl:output message="tns:assignOut"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <!-- Partner-link type - REQUIRED by BPEL -->
+  <plnk:partnerLinkType name="ResidenceLT">
+    <plnk:role name="residenceProvider" portType="tns:ResidencePT"/>
+  </plnk:partnerLinkType>
+
+  <wsdl:binding name="ResidenceSOAP" type="tns:ResidencePT">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="assignRoom">
+      <soap:operation soapAction="assignRoom"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="ResidenceService">
+    <wsdl:port name="ResidencePort" binding="tns:ResidenceSOAP">
+      <soap:address location="http://localhost:8080/residence-service/ResidenceService"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="UniversityService"
+  targetNamespace="http://tp.bpel/university/"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:tns="http://tp.bpel/university/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype">
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://tp.bpel/university/">
+      <xsd:element name="registerRequest">
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name="studentId" type="xsd:string"/>
+          <xsd:element name="program" type="xsd:string"/>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+      <xsd:element name="registerResponse">
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name="studentId" type="xsd:string"/>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+      <xsd:element name="cancelRequest">
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name="studentId" type="xsd:string"/>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+      <xsd:element name="cancelResponse">
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name="status" type="xsd:string"/>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="registerIn"><wsdl:part name="payload" element="tns:registerRequest"/></wsdl:message>
+  <wsdl:message name="registerOut"><wsdl:part name="payload" element="tns:registerResponse"/></wsdl:message>
+  <wsdl:message name="cancelIn"><wsdl:part name="payload" element="tns:cancelRequest"/></wsdl:message>
+  <wsdl:message name="cancelOut"><wsdl:part name="payload" element="tns:cancelResponse"/></wsdl:message>
+
+  <wsdl:portType name="UniversityPT">
+    <wsdl:operation name="register">
+      <wsdl:input message="tns:registerIn"/>
+      <wsdl:output message="tns:registerOut"/>
+    </wsdl:operation>
+    <wsdl:operation name="cancel">
+      <wsdl:input message="tns:cancelIn"/>
+      <wsdl:output message="tns:cancelOut"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <!-- Partner-link type - REQUIRED by BPEL -->
+  <plnk:partnerLinkType name="UniversityLT">
+    <plnk:role name="universityProvider" portType="tns:UniversityPT"/>
+  </plnk:partnerLinkType>
+
+  <wsdl:binding name="UniversitySOAP" type="tns:UniversityPT">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="register">
+      <soap:operation soapAction="register"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="cancel">
+      <soap:operation soapAction="cancel"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="UniversityService">
+    <wsdl:port name="UniversityPort" binding="tns:UniversitySOAP">
+      <soap:address location="http://localhost:8080/university-service/UniversityService"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
