@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process name="EnrollmentProcess"
+  targetNamespace="http://tp.bpel/enrollment/"
+  xmlns="http://docs.oasis-open.org/wsbpel/2.0/process/executable"
+  xmlns:tns="http://tp.bpel/enrollment/"
+  xmlns:uni="http://tp.bpel/university/"
+  xmlns:bnk="http://tp.bpel/bank/"
+  xmlns:res="http://tp.bpel/residence/"
+  xmlns:trn="http://tp.bpel/transport/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <import location="EnrollmentProcess.wsdl" namespace="http://tp.bpel/enrollment/"/>
+  <import location="partner-wsdls/university.wsdl" namespace="http://tp.bpel/university/" importType="http://schemas.xmlsoap.org/wsdl/"/>
+  <import location="partner-wsdls/bank.wsdl" namespace="http://tp.bpel/bank/" importType="http://schemas.xmlsoap.org/wsdl/"/>
+  <import location="partner-wsdls/residence.wsdl" namespace="http://tp.bpel/residence/" importType="http://schemas.xmlsoap.org/wsdl/"/>
+  <import location="partner-wsdls/transport.wsdl" namespace="http://tp.bpel/transport/" importType="http://schemas.xmlsoap.org/wsdl/"/>
+
+  <partnerLinks>
+    <partnerLink name="client" partnerLinkType="tns:EnrollmentLT" myRole="enrollmentProvider"/>
+    <partnerLink name="university" partnerLinkType="uni:UniversityLT" partnerRole="universityProvider"/>
+    <partnerLink name="bank" partnerLinkType="bnk:BankLT" partnerRole="bankProvider"/>
+    <partnerLink name="residence" partnerLinkType="res:ResidenceLT" partnerRole="residenceProvider"/>
+    <partnerLink name="transport" partnerLinkType="trn:TransportLT" partnerRole="transportProvider"/>
+  </partnerLinks>
+
+  <variables>
+    <variable name="request" messageType="tns:enrollIn"/>
+    <variable name="response" messageType="tns:enrollOut"/>
+    <variable name="uniReq" messageType="uni:registerIn"/>
+    <variable name="uniResp" messageType="uni:registerOut"/>
+    <variable name="payReq" messageType="bnk:payIn"/>
+    <variable name="payResp" messageType="bnk:payOut"/>
+    <variable name="resReq" messageType="res:assignIn"/>
+    <variable name="resResp" messageType="res:assignOut"/>
+    <variable name="trnReq" messageType="trn:activateIn"/>
+    <variable name="trnResp" messageType="trn:activateOut"/>
+  </variables>
+
+  <faultHandlers>
+    <catch faultName="paymentRefused">
+      <!-- Compensation: roll back the university registration -->
+      <sequence>
+        <assign>
+          <copy><from>$uniResp.payload/studentId</from><to>$uniReq.payload/studentId</to></copy>
+        </assign>
+        <invoke partnerLink="university" portType="uni:UniversityPT" operation="cancel"
+                inputVariable="uniReq"/>
+        <assign>
+          <copy><from>"REFUSED"</from><to>$response.payload/status</to></copy>
+        </assign>
+        <reply partnerLink="client" portType="tns:EnrollmentPT" operation="enroll"
+               variable="response"/>
+      </sequence>
+    </catch>
+  </faultHandlers>
+
+  <sequence>
+    <!-- 1. Receive the student request -->
+    <receive partnerLink="client" portType="tns:EnrollmentPT" operation="enroll"
+             variable="request" createInstance="yes"/>
+
+    <!-- 2. Register at the university -->
+    <assign>
+      <copy><from>$request.payload/studentId</from><to>$uniReq.payload/studentId</to></copy>
+      <copy><from>$request.payload/program</from><to>$uniReq.payload/program</to></copy>
+    </assign>
+    <invoke partnerLink="university" portType="uni:UniversityPT" operation="register"
+            inputVariable="uniReq" outputVariable="uniResp"/>
+
+    <!-- 3. Attempt to collect tuition -->
+    <assign>
+      <copy><from>$uniResp.payload/studentId</from><to>$payReq.payload/studentId</to></copy>
+      <copy><from>$request.payload/amount</from><to>$payReq.payload/amount</to></copy>
+    </assign>
+    <invoke partnerLink="bank" portType="bnk:BankPT" operation="pay"
+            inputVariable="payReq" outputVariable="payResp"/>
+
+    <!-- 4. Branch on the payment result -->
+    <if>
+      <condition>$payResp.payload/approved = true()</condition>
+
+      <!-- 4.a OK path: residence + transport in PARALLEL -->
+      <flow>
+        <sequence>
+          <assign>
+            <copy><from>$uniResp.payload/studentId</from><to>$resReq.payload/studentId</to></copy>
+          </assign>
+          <invoke partnerLink="residence" portType="res:ResidencePT" operation="assignRoom"
+                  inputVariable="resReq" outputVariable="resResp"/>
+        </sequence>
+        <sequence>
+          <assign>
+            <copy><from>$uniResp.payload/studentId</from><to>$trnReq.payload/studentId</to></copy>
+          </assign>
+          <invoke partnerLink="transport" portType="trn:TransportPT" operation="activatePass"
+                  inputVariable="trnReq" outputVariable="trnResp"/>
+        </sequence>
+      </flow>
+
+      <else>
+        <!-- 4.b KO path: throw the fault that triggers compensation -->
+        <throw faultName="paymentRefused"/>
+      </else>
+    </if>
+
+    <!-- 5. Build and return the final response -->
+    <assign>
+      <copy><from>$uniResp.payload/studentId</from><to>$response.payload/studentId</to></copy>
+      <copy><from>$resResp.payload/roomNumber</from><to>$response.payload/roomNumber</to></copy>
+      <copy><from>$trnResp.payload/passId</from><to>$response.payload/passId</to></copy>
+      <copy><from>$payResp.payload/receipt</from><to>$response.payload/receipt</to></copy>
+      <copy><from>"ENROLLED"</from><to>$response.payload/status</to></copy>
+    </assign>
+    <reply partnerLink="client" portType="tns:EnrollmentPT" operation="enroll"
+           variable="response"/>
+  </sequence>
+</process>

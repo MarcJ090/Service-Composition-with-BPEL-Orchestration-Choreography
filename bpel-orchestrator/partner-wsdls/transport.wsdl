@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions name="TransportService"
+  targetNamespace="http://tp.bpel/transport/"
+  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+  xmlns:tns="http://tp.bpel/transport/"
+  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+  xmlns:plnk="http://docs.oasis-open.org/wsbpel/2.0/plnktype">
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://tp.bpel/transport/">
+      <xsd:element name="activatePassRequest">
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name="studentId" type="xsd:string"/>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+      <xsd:element name="activatePassResponse">
+        <xsd:complexType><xsd:sequence>
+          <xsd:element name="studentId" type="xsd:string"/>
+          <xsd:element name="passId" type="xsd:string"/>
+        </xsd:sequence></xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="activateIn"><wsdl:part name="payload" element="tns:activatePassRequest"/></wsdl:message>
+  <wsdl:message name="activateOut"><wsdl:part name="payload" element="tns:activatePassResponse"/></wsdl:message>
+
+  <wsdl:portType name="TransportPT">
+    <wsdl:operation name="activatePass">
+      <wsdl:input message="tns:activateIn"/>
+      <wsdl:output message="tns:activateOut"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <!-- Partner-link type - REQUIRED by BPEL -->
+  <plnk:partnerLinkType name="TransportLT">
+    <plnk:role name="transportProvider" portType="tns:TransportPT"/>
+  </plnk:partnerLinkType>
+
+  <wsdl:binding name="TransportSOAP" type="tns:TransportPT">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="activatePass">
+      <soap:operation soapAction="activatePass"/>
+      <wsdl:input><soap:body use="literal"/></wsdl:input>
+      <wsdl:output><soap:body use="literal"/></wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="TransportService">
+    <wsdl:port name="TransportPort" binding="tns:TransportSOAP">
+      <soap:address location="http://localhost:8080/transport-service/TransportService"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
