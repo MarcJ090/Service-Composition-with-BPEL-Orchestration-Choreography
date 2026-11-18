@@ -16,13 +16,13 @@
           <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
    <soapenv:Header/>
    <soapenv:Body>
-      <enr:enroll>
-         <enr:payload>
-            <enr:studentId>STU-10345</enr:studentId>
-            <enr:program>MSc-ISI</enr:program>
-            <enr:amount>350000</enr:amount>
-         </enr:payload>
-      </enr:enroll>
+      <enr:enrollIn>
+         
+            <studentId>STU-10345</studentId>
+            <program>MSc-ISI</program>
+            <amount>350000</amount>
+         
+      </enr:enrollIn>
    </soapenv:Body>
 </soapenv:Envelope>]]></con:request>
         </con:request>
@@ -41,9 +41,9 @@
           <con:endpoint>http://localhost:8080/ode/processes/EnrollmentService</con:endpoint>
           <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
    <soapenv:Body>
-      <enr:enroll><enr:payload>
-         <enr:studentId>STU-10345</enr:studentId><enr:program>MSc-ISI</enr:program><enr:amount>350000</enr:amount>
-      </enr:payload></enr:enroll>
+      <enr:enrollIn>
+         <studentId>STU-10345</studentId><program>MSc-ISI</program><amount>350000</amount>
+      </enr:enrollIn>
    </soapenv:Body>
 </soapenv:Envelope>]]></con:request>
         </con:config>
@@ -59,9 +59,9 @@
           <con:endpoint>http://localhost:8080/ode/processes/EnrollmentService</con:endpoint>
           <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
    <soapenv:Body>
-      <enr:enroll><enr:payload>
-         <enr:studentId>STU-90001</enr:studentId><enr:program>MSc-ISI</enr:program><enr:amount>900000</enr:amount>
-      </enr:payload></enr:enroll>
+      <enr:enrollIn>
+         <studentId>STU-90001</studentId><program>MSc-ISI</program><amount>900000</amount>
+      </enr:enrollIn>
    </soapenv:Body>
 </soapenv:Envelope>]]></con:request>
         </con:config>
@@ -77,9 +77,9 @@
           <con:endpoint>http://localhost:8080/ode/processes/EnrollmentService</con:endpoint>
           <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
    <soapenv:Body>
-      <enr:enroll><enr:payload>
-         <enr:studentId>STU-50000</enr:studentId><enr:program>MSc-ISI</enr:program><enr:amount>500000</enr:amount>
-      </enr:payload></enr:enroll>
+      <enr:enrollIn>
+         <studentId>STU-50000</studentId><program>MSc-ISI</program><amount>500000</amount>
+      </enr:enrollIn>
    </soapenv:Body>
 </soapenv:Envelope>]]></con:request>
         </con:config>
@@ -95,9 +95,9 @@
           <con:endpoint>http://localhost:8080/ode/processes/EnrollmentService</con:endpoint>
           <con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:enr="http://tp.bpel/enrollment/">
    <soapenv:Body>
-      <enr:enroll><enr:payload>
-         <enr:studentId>STU-77777</enr:studentId><enr:program>MSc-ISI</enr:program><enr:amount>900000</enr:amount>
-      </enr:payload></enr:enroll>
+      <enr:enrollIn>
+         <studentId>STU-77777</studentId><program>MSc-ISI</program><amount>900000</amount>
+      </enr:enrollIn>
    </soapenv:Body>
 </soapenv:Envelope>]]></con:request>
         </con:config>

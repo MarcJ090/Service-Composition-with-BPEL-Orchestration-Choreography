@@ -9,7 +9,7 @@
   xmlns:trn="http://tp.bpel/transport/"
   xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 
-  <import location="EnrollmentProcess.wsdl" namespace="http://tp.bpel/enrollment/"/>
+  <import location="EnrollmentProcess.wsdl" namespace="http://tp.bpel/enrollment/" importType="http://schemas.xmlsoap.org/wsdl/"/>
   <import location="partner-wsdls/university.wsdl" namespace="http://tp.bpel/university/" importType="http://schemas.xmlsoap.org/wsdl/"/>
   <import location="partner-wsdls/bank.wsdl" namespace="http://tp.bpel/bank/" importType="http://schemas.xmlsoap.org/wsdl/"/>
   <import location="partner-wsdls/residence.wsdl" namespace="http://tp.bpel/residence/" importType="http://schemas.xmlsoap.org/wsdl/"/>
@@ -28,6 +28,8 @@
     <variable name="response" messageType="tns:enrollOut"/>
     <variable name="uniReq" messageType="uni:registerIn"/>
     <variable name="uniResp" messageType="uni:registerOut"/>
+    <variable name="cancelReq" messageType="uni:cancelIn"/>
+    <variable name="cancelResp" messageType="uni:cancelOut"/>
     <variable name="payReq" messageType="bnk:payIn"/>
     <variable name="payResp" messageType="bnk:payOut"/>
     <variable name="resReq" messageType="res:assignIn"/>
@@ -38,13 +40,12 @@
 
   <faultHandlers>
     <catch faultName="paymentRefused">
-      <!-- Compensation: roll back the university registration -->
       <sequence>
         <assign>
-          <copy><from>$uniResp.payload/studentId</from><to>$uniReq.payload/studentId</to></copy>
+          <copy><from>$uniResp.payload/studentId</from><to>$cancelReq.payload/studentId</to></copy>
         </assign>
         <invoke partnerLink="university" portType="uni:UniversityPT" operation="cancel"
-                inputVariable="uniReq"/>
+                inputVariable="cancelReq" outputVariable="cancelResp"/>
         <assign>
           <copy><from>"REFUSED"</from><to>$response.payload/status</to></copy>
         </assign>
@@ -55,9 +56,36 @@
   </faultHandlers>
 
   <sequence>
-    <!-- 1. Receive the student request -->
     <receive partnerLink="client" portType="tns:EnrollmentPT" operation="enroll"
              variable="request" createInstance="yes"/>
+
+    <!-- initialize the part elements: ODE creates empty roots -->
+    <assign>
+      <copy>
+        <from><literal><uni:registerRequest xmlns:uni="http://tp.bpel/university/"><studentId xmlns=""/><program xmlns=""/></uni:registerRequest></literal></from>
+        <to variable="uniReq" part="payload"/>
+      </copy>
+      <copy>
+        <from><literal><bnk:payRequest xmlns:bnk="http://tp.bpel/bank/"><studentId xmlns=""/><amount xmlns=""/></bnk:payRequest></literal></from>
+        <to variable="payReq" part="payload"/>
+      </copy>
+      <copy>
+        <from><literal><res:assignRoomRequest xmlns:res="http://tp.bpel/residence/"><studentId xmlns=""/></res:assignRoomRequest></literal></from>
+        <to variable="resReq" part="payload"/>
+      </copy>
+      <copy>
+        <from><literal><trn:activatePassRequest xmlns:trn="http://tp.bpel/transport/"><studentId xmlns=""/></trn:activatePassRequest></literal></from>
+        <to variable="trnReq" part="payload"/>
+      </copy>
+      <copy>
+        <from><literal><uni:cancelRequest xmlns:uni="http://tp.bpel/university/"><studentId xmlns=""/></uni:cancelRequest></literal></from>
+        <to variable="cancelReq" part="payload"/>
+      </copy>
+      <copy>
+        <from><literal><tns:enrollOut xmlns:tns="http://tp.bpel/enrollment/"><studentId xmlns=""/><roomNumber xmlns=""/><passId xmlns=""/><receipt xmlns=""/><status xmlns=""/></tns:enrollOut></literal></from>
+        <to variable="response" part="payload"/>
+      </copy>
+    </assign>
 
     <!-- 2. Register at the university -->
     <assign>
@@ -77,9 +105,8 @@
 
     <!-- 4. Branch on the payment result -->
     <if>
-      <condition>$payResp.payload/approved = true()</condition>
+      <condition>string($payResp.payload/approved) = 'true'</condition>
 
-      <!-- 4.a OK path: residence + transport in PARALLEL -->
       <flow>
         <sequence>
           <assign>
@@ -98,7 +125,6 @@
       </flow>
 
       <else>
-        <!-- 4.b KO path: throw the fault that triggers compensation -->
         <throw faultName="paymentRefused"/>
       </else>
     </if>

@@ -1,32 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:tns="http://tp.bpel/enrollment/"
-            targetNamespace="http://tp.bpel/enrollment/"
-            elementFormDefault="qualified">
+            targetNamespace="http://tp.bpel/enrollment/">
 
   <xsd:element name="enrollIn">
     <xsd:complexType><xsd:sequence>
-      <xsd:element name="payload">
-        <xsd:complexType><xsd:sequence>
-          <xsd:element name="studentId" type="xsd:string"/>
-          <xsd:element name="program" type="xsd:string"/>
-          <xsd:element name="amount" type="xsd:decimal"/>
-        </xsd:sequence></xsd:complexType>
-      </xsd:element>
+      <xsd:element name="studentId" type="xsd:string"/>
+      <xsd:element name="program" type="xsd:string"/>
+      <xsd:element name="amount" type="xsd:decimal"/>
     </xsd:sequence></xsd:complexType>
   </xsd:element>
 
   <xsd:element name="enrollOut">
     <xsd:complexType><xsd:sequence>
-      <xsd:element name="payload">
-        <xsd:complexType><xsd:sequence>
-          <xsd:element name="studentId" type="xsd:string"/>
-          <xsd:element name="roomNumber" type="xsd:string"/>
-          <xsd:element name="passId" type="xsd:string"/>
-          <xsd:element name="receipt" type="xsd:string"/>
-          <xsd:element name="status" type="xsd:string"/>
-        </xsd:sequence></xsd:complexType>
-      </xsd:element>
+      <xsd:element name="studentId" type="xsd:string"/>
+      <xsd:element name="roomNumber" type="xsd:string"/>
+      <xsd:element name="passId" type="xsd:string"/>
+      <xsd:element name="receipt" type="xsd:string"/>
+      <xsd:element name="status" type="xsd:string"/>
     </xsd:sequence></xsd:complexType>
   </xsd:element>
 </xsd:schema>
